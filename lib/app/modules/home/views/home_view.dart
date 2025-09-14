@@ -1,4 +1,3 @@
-import 'dart:ui' show FontFeature;
 import 'dart:math' as math;
 import 'dart:async'; // added
 import 'package:desktop_drop/desktop_drop.dart';
@@ -374,8 +373,8 @@ class HomeView extends GetView<HomeController> {
 
   AppBar _appBar(BuildContext context) {
     return AppBar(
-      title: const Text('Jingle Pads'),
-      centerTitle: true,
+      title: const Text('Pro Pads'),
+      centerTitle: false,
       actions: [
         IconButton(
           tooltip: 'Add files',
