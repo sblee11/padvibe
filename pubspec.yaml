@@ -39,6 +39,7 @@ dependencies:
   file_picker: ^10.3.3
   desktop_drop: ^0.6.1
   desktop_multi_window: ^0.2.1
+  segment_display: ^0.5.0
 
 dev_dependencies:
   flutter_test:

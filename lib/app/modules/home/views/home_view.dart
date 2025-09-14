@@ -11,18 +11,9 @@ class HomeView extends GetView<HomeController> {
 
   // --- Added: detachable timer overlay state/helpers ---
   static OverlayEntry? _timerOverlay;
-  static final ValueNotifier<Offset> _timerOverlayPos = ValueNotifier<Offset>(
-    const Offset(80, 80),
-  );
 
   // Added: overlay sizing (now resizable)
-  static const double _kOverlayW = 260.0;
-  static const double _kOverlayH = 56.0;
-  static const double _kOverlayMinW = 200.0;
-  static const double _kOverlayMinH = 56.0;
-  static final ValueNotifier<Size> _timerOverlaySize = ValueNotifier<Size>(
-    const Size(_kOverlayW, _kOverlayH),
-  );
+  // static const double _kOverlayMinW = 200.0;
 
   // Added: API to get formatted timer text only
   static String getTimerTextOnly() {
@@ -60,230 +51,6 @@ class HomeView extends GetView<HomeController> {
     return t.isEven;
   }
 
-  void _toggleDetachTimer(BuildContext context) {
-    if (_timerOverlay == null) {
-      _showTimerOverlay(context);
-    } else {
-      _removeTimerOverlay();
-    }
-  }
-
-  void _showTimerOverlay(BuildContext context) {
-    if (_timerOverlay != null) return;
-    final overlay = Overlay.of(context, rootOverlay: true);
-    if (overlay == null) return;
-
-    _timerOverlay = OverlayEntry(
-      builder: (ctx) {
-        final theme = Theme.of(ctx);
-        return ValueListenableBuilder<Offset>(
-          valueListenable: _timerOverlayPos,
-          builder: (_, offset, __) {
-            return Positioned(
-              left: offset.dx,
-              top: offset.dy,
-              child: Material(
-                color: Colors.transparent,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    // Changed: clamp within screen while dragging (uses current overlay size)
-                    final screen = MediaQuery.of(ctx).size;
-                    final next = _timerOverlayPos.value + details.delta;
-                    final sz = _timerOverlaySize.value;
-                    _timerOverlayPos.value = Offset(
-                      next.dx.clamp(8.0, screen.width - sz.width - 8.0),
-                      next.dy.clamp(8.0, screen.height - sz.height - 8.0),
-                    );
-                  },
-                  onPanEnd: (_) {
-                    // Changed: snap to nearest horizontal edge (uses current overlay size)
-                    final screen = MediaQuery.of(ctx).size;
-                    final sz = _timerOverlaySize.value;
-                    final x = _timerOverlayPos.value.dx;
-                    final targetX = x < screen.width / 2
-                        ? 8.0
-                        : (screen.width - sz.width - 8.0);
-                    _timerOverlayPos.value = Offset(
-                      targetX,
-                      _timerOverlayPos.value.dy.clamp(
-                        8.0,
-                        screen.height - sz.height - 8.0,
-                      ),
-                    );
-                  },
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.move,
-                    child: ValueListenableBuilder<Size>(
-                      valueListenable: _timerOverlaySize,
-                      builder: (_, sz, __) {
-                        return SizedBox(
-                          width: sz.width,
-                          height: sz.height,
-                          child: Obx(() {
-                            // Changed: color-coded border, blinking indicator, better time format
-                            final secs = Get.find<HomeController>()
-                                .remainingSeconds
-                                .value;
-                            final accent = _urgencyColor(ctx, secs);
-                            final blinking = _blink(secs);
-                            return Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.surface
-                                          .withOpacity(0.95),
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Colors.black26,
-                                          blurRadius: 12,
-                                          offset: Offset(0, 6),
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: accent.withOpacity(0.6),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.timer_outlined,
-                                          color: accent,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        AnimatedOpacity(
-                                          opacity: blinking ? 1 : 0.25,
-                                          duration: const Duration(
-                                            milliseconds: 200,
-                                          ),
-                                          child: Icon(
-                                            Icons.circle,
-                                            size: 8,
-                                            color: accent,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: Text(
-                                            'Remaining: ${_formatRemaining(secs)}',
-                                            overflow: TextOverflow.fade,
-                                            softWrap: false,
-                                            style: TextStyle(
-                                              color: accent,
-                                              fontFeatures: const [
-                                                FontFeature.tabularFigures(),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          tooltip: 'Stop all',
-                                          icon: const Icon(Icons.stop),
-                                          color: theme.colorScheme.error,
-                                          onPressed: Get.find<HomeController>()
-                                              .stopAll,
-                                        ),
-                                        IconButton(
-                                          tooltip: 'Dock timer',
-                                          icon: const Icon(
-                                            Icons.close_fullscreen,
-                                          ),
-                                          onPressed: _removeTimerOverlay,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                // Added: bottom-right resize handle
-                                Positioned(
-                                  right: 4,
-                                  bottom: 4,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors
-                                        .resizeUpLeftDownRight,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onPanUpdate: (details) {
-                                        final screen = MediaQuery.of(ctx).size;
-                                        final pos = _timerOverlayPos.value;
-                                        final current = _timerOverlaySize.value;
-                                        final newW =
-                                            (current.width + details.delta.dx)
-                                                .clamp(
-                                                  _kOverlayMinW,
-                                                  screen.width - pos.dx - 8.0,
-                                                );
-                                        final newH =
-                                            (current.height + details.delta.dy)
-                                                .clamp(
-                                                  _kOverlayMinH,
-                                                  screen.height - pos.dy - 8.0,
-                                                );
-                                        _timerOverlaySize.value = Size(
-                                          newW,
-                                          newH,
-                                        );
-                                      },
-                                      onDoubleTap: () {
-                                        // Optional: reset size to default
-                                        _timerOverlaySize.value = const Size(
-                                          _kOverlayW,
-                                          _kOverlayH,
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 16,
-                                        height: 16,
-                                        decoration: BoxDecoration(
-                                          color: theme
-                                              .colorScheme
-                                              .surfaceVariant
-                                              .withOpacity(0.8),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                          border: Border.all(
-                                            color: accent.withOpacity(0.6),
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.open_in_full,
-                                          size: 12,
-                                          color: accent,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    overlay.insert(_timerOverlay!);
-  }
-
-  void _removeTimerOverlay() {
-    _timerOverlay?.remove();
-    _timerOverlay = null;
-  }
   // --- End added ---
 
   @override
@@ -352,38 +119,62 @@ class HomeView extends GetView<HomeController> {
         final detached = _timerOverlay != null; // Added
         final accent = _urgencyColor(context, secs); // Added
         final blinking = _blink(secs); // Added
+
+        // Added: larger, more readable timer styles
+        final bigTimeStyle = TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: accent,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          letterSpacing: 0.5,
+          height: 1.1,
+        );
+        final labelStyle = TextStyle(
+          fontSize: 12,
+          color: accent.withOpacity(0.85),
+        );
+
         return BottomAppBar(
           elevation: 2,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ), // increased
             child: Row(
               children: [
-                Icon(Icons.timer_outlined, color: accent),
-                const SizedBox(width: 6),
+                Icon(Icons.timer_outlined, color: accent, size: 28), // larger
+                const SizedBox(width: 8),
                 AnimatedOpacity(
                   opacity: blinking ? 1 : 0.25,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(Icons.circle, size: 8, color: accent),
+                  child: Icon(Icons.circle, size: 12, color: accent), // larger
                 ),
-                const SizedBox(width: 8),
-                // --- Changed: formatted, color-coded text and show time even when detached ---
+                const SizedBox(width: 12),
+                // Reworked: small label + big, bold time
                 if (!detached)
-                  Text(
-                    'Remaining: ${_formatRemaining(secs)}',
-                    style: TextStyle(
-                      color: accent,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: _formatRemaining(secs),
+                          style: bigTimeStyle,
+                        ),
+                      ],
                     ),
                   )
                 else
-                  Text(
-                    'Timer detached (${_formatRemaining(secs)})',
-                    style: TextStyle(
-                      color: accent.withOpacity(0.85),
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: 'Timer detached  ', style: labelStyle),
+                        TextSpan(
+                          text: _formatRemaining(secs),
+                          style: bigTimeStyle,
+                        ),
+                      ],
                     ),
                   ),
-                // --- End changed ---
                 const Spacer(),
                 TextButton.icon(
                   onPressed: controller.stopAll,

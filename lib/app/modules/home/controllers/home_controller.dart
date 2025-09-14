@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:pads/app/data/pad_model.dart';
 import 'package:pads/app/service/audio_player_service.dart';
 import 'package:pads/app/service/storage_service.dart';
-import 'package:pads/main.dart';
 
 class HomeController extends GetxController {
   final audioService = Get.find<AudioPlayerService>();

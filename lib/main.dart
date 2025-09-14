@@ -13,6 +13,7 @@ Future<void> main() async {
       title: "Audio Pads",
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
+      debugShowCheckedModeBanner: false,
     ),
   );
 }
