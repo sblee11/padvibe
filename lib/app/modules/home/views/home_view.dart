@@ -12,9 +12,6 @@ class HomeView extends GetView<HomeController> {
   // --- Added: detachable timer overlay state/helpers ---
   static OverlayEntry? _timerOverlay;
 
-  // Added: overlay sizing (now resizable)
-  // static const double _kOverlayMinW = 200.0;
-
   // Added: API to get formatted timer text only
   static String getTimerTextOnly() {
     final secs = Get.find<HomeController>().remainingSeconds.value;
@@ -119,62 +116,38 @@ class HomeView extends GetView<HomeController> {
         final detached = _timerOverlay != null; // Added
         final accent = _urgencyColor(context, secs); // Added
         final blinking = _blink(secs); // Added
-
-        // Added: larger, more readable timer styles
-        final bigTimeStyle = TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: accent,
-          fontFeatures: const [FontFeature.tabularFigures()],
-          letterSpacing: 0.5,
-          height: 1.1,
-        );
-        final labelStyle = TextStyle(
-          fontSize: 12,
-          color: accent.withOpacity(0.85),
-        );
-
         return BottomAppBar(
           elevation: 2,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ), // increased
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Icon(Icons.timer_outlined, color: accent, size: 28), // larger
-                const SizedBox(width: 8),
+                Icon(Icons.timer_outlined, color: accent),
+                const SizedBox(width: 6),
                 AnimatedOpacity(
                   opacity: blinking ? 1 : 0.25,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(Icons.circle, size: 12, color: accent), // larger
+                  child: Icon(Icons.circle, size: 8, color: accent),
                 ),
-                const SizedBox(width: 12),
-                // Reworked: small label + big, bold time
+                const SizedBox(width: 8),
+                // --- Changed: formatted, color-coded text and show time even when detached ---
                 if (!detached)
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: _formatRemaining(secs),
-                          style: bigTimeStyle,
-                        ),
-                      ],
+                  Text(
+                    'Remaining: ${_formatRemaining(secs)}',
+                    style: TextStyle(
+                      color: accent,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   )
                 else
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: 'Timer detached  ', style: labelStyle),
-                        TextSpan(
-                          text: _formatRemaining(secs),
-                          style: bigTimeStyle,
-                        ),
-                      ],
+                  Text(
+                    'Timer detached (${_formatRemaining(secs)})',
+                    style: TextStyle(
+                      color: accent.withOpacity(0.85),
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
+                // --- End changed ---
                 const Spacer(),
                 TextButton.icon(
                   onPressed: controller.stopAll,
