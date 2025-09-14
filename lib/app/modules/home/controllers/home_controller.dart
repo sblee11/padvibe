@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'package:PadVibe/app/data/pad_model.dart';
+import 'package:PadVibe/app/service/audio_player_service.dart';
+import 'package:PadVibe/app/service/storage_service.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:pads/app/data/pad_model.dart';
-import 'package:pads/app/service/audio_player_service.dart';
-import 'package:pads/app/service/storage_service.dart';
 
 class HomeController extends GetxController {
   final audioService = Get.find<AudioPlayerService>();
@@ -158,7 +158,10 @@ class HomeController extends GetxController {
 
   Future<void> clearAll() async {
     await audioService.clearAll();
-    pads.assignAll([for (int i = 1; i <= 20; i++) Pad(name: 'Pad $i')]);
+    // Clear pads and delete stored data
+    pads.clear();
+    pads.addAll(<Pad>[for (int i = 1; i <= 20; i++) Pad(name: 'Pad $i')].obs);
+    pads.refresh(); // Trigger UI update
     await storage.clear();
     await storage.clearAudioLibrary();
   }

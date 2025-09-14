@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 import 'dart:async'; // added
+import 'package:PadVibe/app/data/pad_model.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../controllers/home_controller.dart';
-import 'package:pads/app/data/pad_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -235,80 +236,92 @@ class HomeView extends GetView<HomeController> {
     ];
     return Scaffold(
       appBar: _appBar(context),
-      body: Row(
-        children: [
-          Expanded(
-            child: Obx(() {
-              // Read the ticker to trigger rebuilds for progress bars.
-              final _ = controller.remainingSeconds.value;
-              return Padding(
-                padding: const EdgeInsets.all(12),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    const spacing = 12.0;
-                    const targetTileW = 260.0; // desired width per tile
-                    const minTileH =
-                        180.0; // enforce min height to prevent overflow
-                    const maxCols = 8;
-
-                    int cols = (width / (targetTileW + spacing)).floor().clamp(
-                      1,
-                      maxCols,
-                    );
-                    final itemW = (width - spacing * (cols - 1)) / cols;
-                    final childAspect = itemW / minTileH;
-
-                    return GridView.builder(
-                      itemCount: controller.pads.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: cols,
-                        mainAxisSpacing: spacing,
-                        crossAxisSpacing: spacing,
-                        childAspectRatio: childAspect,
-                      ),
-                      itemBuilder: (context, index) {
-                        final pad = controller.pads[index];
-                        final color = colors[index % colors.length];
-                        final hasFile = pad.path != null;
-                        final fileName = hasFile
-                            ? pad.path!.split('/').last
-                            : 'Empty';
-                        return DropTarget(
-                          onDragDone: (detail) {
-                            if (detail.files.isEmpty) return;
-                            final f = detail.files.first;
-                            if (!f.name.toLowerCase().endsWith('.mp3') &&
-                                !f.name.toLowerCase().endsWith('.wav') &&
-                                !f.name.toLowerCase().endsWith('.ogg') &&
-                                !f.name.toLowerCase().endsWith('.flac') &&
-                                !f.name.toLowerCase().endsWith('.aac') &&
-                                !f.name.toLowerCase().endsWith('.m4a')) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Unsupported file type: ${f.name}',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                            controller.assignFilePathToPad(index, f.path);
+      body: KeyboardListener(
+        focusNode: FocusNode(),
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+            controller.stopAll();
+          }
+        },
+        child: Row(
+          children: [
+            Expanded(
+              child: Obx(() {
+                // Read the ticker to trigger rebuilds for progress bars.
+                final _ = controller.remainingSeconds.value;
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      const spacing = 12.0;
+                      const targetTileW = 260.0; // desired width per tile
+                      const minTileH =
+                          180.0; // enforce min height to prevent overflow
+                      const maxCols = 8;
+        
+                      int cols = (width / (targetTileW + spacing)).floor().clamp(
+                        1,
+                        maxCols,
+                      );
+                      final itemW = (width - spacing * (cols - 1)) / cols;
+                      final childAspect = itemW / minTileH;
+        
+                      return Obx(
+                        () => GridView.builder(
+                          itemCount: controller.pads.length,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: cols,
+                            mainAxisSpacing: spacing,
+                            crossAxisSpacing: spacing,
+                            childAspectRatio: childAspect,
+                          ),
+                          itemBuilder: (context, index) {
+                            final pad = controller.pads[index].obs;
+                            final color = colors[index % colors.length];
+                            final hasFile = pad.value.path != null;
+                            final fileName = hasFile
+                                ? pad.value.path!.split('/').last
+                                : 'Empty';
+                            return Obx(
+                              () => DropTarget(
+                                onDragDone: (detail) {
+                                  if (detail.files.isEmpty) return;
+                                  final f = detail.files.first;
+                                  if (!f.name.toLowerCase().endsWith('.mp3') &&
+                                      !f.name.toLowerCase().endsWith('.wav') &&
+                                      !f.name.toLowerCase().endsWith('.ogg') &&
+                                      !f.name.toLowerCase().endsWith('.flac') &&
+                                      !f.name.toLowerCase().endsWith('.aac') &&
+                                      !f.name.toLowerCase().endsWith('.m4a')) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Unsupported file type: ${f.name}',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  controller.assignFilePathToPad(index, f.path);
+                                },
+                                child: _pad(color, hasFile, index, pad.value, fileName),
+                              ),
+                            );
                           },
-                          child: _pad(color, hasFile, index, pad, fileName),
-                        );
-                      },
-                    );
-                  },
-                ),
-              );
-            }),
-          ),
-          // master audio meter <-- new
-          const SizedBox(width: 8),
-          _MasterAudioMeter(controller: controller),
-          const SizedBox(width: 8),
-        ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
+            ),
+            // master audio meter <-- new
+            const SizedBox(width: 8),
+            _MasterAudioMeter(controller: controller),
+            const SizedBox(width: 8),
+          ],
+        ),
       ),
       bottomNavigationBar: Obx(() {
         final secs = controller.remainingSeconds.value;
@@ -399,11 +412,11 @@ class HomeView extends GetView<HomeController> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
+                    onPressed: () => Get.back(result: false),
                     child: const Text('Cancel'),
                   ),
                   FilledButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
+                    onPressed: () => Get.back(result: true),
                     child: const Text('Clear'),
                   ),
                 ],
@@ -436,7 +449,7 @@ class HomeView extends GetView<HomeController> {
     final isPlaying = hasFile && controller.audioService.isPlaying(pad.path!);
 
     // Blend base color towards white when playing for a clear visual change.
-    final baseColor = color.withOpacity(hasFile ? 0.9 : 0.5);
+    final baseColor = color.withOpacity(hasFile ? 1 : 0.4);
     final playingColor = Color.fromARGB(255, 3, 165, 0); // Light Blue 300
     final bgColor = isPlaying ? playingColor.withOpacity(0.95) : baseColor;
 
