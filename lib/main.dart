@@ -8,7 +8,7 @@ Future<void> main() async {
   await Get.putAsync(() async => AudioPlayerService());
   runApp(
     GetMaterialApp(
-      title: "Audio Pads",
+      title: "PadVibe",
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
       debugShowCheckedModeBanner: false,

@@ -386,7 +386,7 @@ class HomeView extends GetView<HomeController> {
 
   AppBar _appBar(BuildContext context) {
     return AppBar(
-      title: const Text('Pro Pads'),
+      title: const Text('PadVibe'),
       centerTitle: false,
       actions: [
         IconButton(
