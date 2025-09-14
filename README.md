@@ -1,4 +1,4 @@
-# pads
+# PadVibe
 
 [![Flutter](https://img.shields.io/badge/Flutter-stable-blue)](https://flutter.dev)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-informational)
@@ -15,7 +15,7 @@
 Cross‑platform Flutter app built for macOS (primary) and tested on macOS; also supports Windows, Linux, and Web. Includes drag‑and‑drop, multi‑window, file picking, and SoLoud‑based audio with session management.
 
 ## Table of Contents
-- [pads](#pads)
+- [PadVibe](#padvibe)
   - [Table of Contents](#table-of-contents)
   - [Quickstart](#quickstart)
   - [Tested Environment (macOS)](#tested-environment-macos)
@@ -37,7 +37,7 @@ Cross‑platform Flutter app built for macOS (primary) and tested on macOS; also
 ## Quickstart
 ```bash
 git clone <your-repo-url>
-cd pads
+cd padvibe
 flutter pub get
 ```
 
@@ -91,7 +91,7 @@ void main() {
 }
 ```
 Example:
-- Windows/Linux/macOS: `pads --file=/path/to/sample.wav --verbose`
+- Windows/Linux/macOS: `padvibe --file=/path/to/sample.wav --verbose`
 
 ## Project Structure (high‑level)
 - `lib/` — app source (Dart)
@@ -108,8 +108,8 @@ Notes:
 ## Screenshots
 Place screenshots under `assets/screenshots/` and reference here.
 ```
-![Pads on macOS](assets/screenshots/macos.png)
-![Pads on Linux](assets/screenshots/linux.png)
+![PadVibe on macOS](assets/screenshots/macos.png)
+![PadVibe on Linux](assets/screenshots/linux.png)
 ```
 
 ## Release & Versioning
@@ -119,7 +119,7 @@ Place screenshots under `assets/screenshots/` and reference here.
 
 ## Web Notes (base href)
 For non‑root hosting, pass `--base-href` at build time. `web/index.html` contains a placeholder:
-- Example: `flutter build web --release --base-href /pads/`
+- Example: `flutter build web --release --base-href /padvibe/`
 
 ## Troubleshooting
 - Missing desktop toolchains:
@@ -143,11 +143,11 @@ TBD. Add a LICENSE file to clarify usage and distribution.
 - Desktop and Web targets: Windows, Linux (GTK), macOS, Web
 - Drag & drop files (desktop_drop)
 - Native file picking (file_picker)
-- Multi‑window utilities (desktop_multi_window)
+<!-- - Multi‑window utilities (desktop_multi_window) -->
 - Audio playback via SoLoud (flutter_soloud)
 - Audio session integration (audio_session)
 - Fast routing/state utils (get)
-- Segment‑style UI elements (segment_display)
+<!-- - Segment‑style UI elements (segment_display) -->
 
 ## Tech Stack
 - Flutter + Dart (Dart >= 3.9)
@@ -156,6 +156,4 @@ TBD. Add a LICENSE file to clarify usage and distribution.
   - flutter_soloud — https://pub.dev/packages/flutter_soloud
   - file_picker — https://pub.dev/packages/file_picker
   - desktop_drop — https://pub.dev/packages/desktop_drop
-  - desktop_multi_window — https://pub.dev/packages/desktop_multi_window
-  - segment_display — https://pub.dev/packages/segment_display
   - audio_session — https://pub.dev/packages/audio_session
