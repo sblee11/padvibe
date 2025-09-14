@@ -244,41 +244,61 @@ class HomeView extends GetView<HomeController> {
               final _ = controller.remainingSeconds.value;
               return Padding(
                 padding: const EdgeInsets.all(12),
-                child: GridView.builder(
-                  itemCount: controller.pads.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 2, // wider than tall -> less height
-                  ),
-                  itemBuilder: (context, index) {
-                    final pad = controller.pads[index];
-                    final color = colors[index % colors.length];
-                    final hasFile = pad.path != null;
-                    final fileName = hasFile
-                        ? pad.path!.split('/').last
-                        : 'Empty';
-                    return DropTarget(
-                      onDragDone: (detail) {
-                        if (detail.files.isEmpty) return;
-                        final f = detail.files.first;
-                        if (!f.name.toLowerCase().endsWith('.mp3') &&
-                            !f.name.toLowerCase().endsWith('.wav') &&
-                            !f.name.toLowerCase().endsWith('.ogg') &&
-                            !f.name.toLowerCase().endsWith('.flac') &&
-                            !f.name.toLowerCase().endsWith('.aac') &&
-                            !f.name.toLowerCase().endsWith('.m4a')) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Unsupported file type: ${f.name}'),
-                            ),
-                          );
-                          return;
-                        }
-                        controller.assignFilePathToPad(index, f.path);
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    const spacing = 12.0;
+                    const targetTileW = 260.0; // desired width per tile
+                    const minTileH =
+                        180.0; // enforce min height to prevent overflow
+                    const maxCols = 8;
+
+                    int cols = (width / (targetTileW + spacing)).floor().clamp(
+                      1,
+                      maxCols,
+                    );
+                    final itemW = (width - spacing * (cols - 1)) / cols;
+                    final childAspect = itemW / minTileH;
+
+                    return GridView.builder(
+                      itemCount: controller.pads.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: cols,
+                        mainAxisSpacing: spacing,
+                        crossAxisSpacing: spacing,
+                        childAspectRatio: childAspect,
+                      ),
+                      itemBuilder: (context, index) {
+                        final pad = controller.pads[index];
+                        final color = colors[index % colors.length];
+                        final hasFile = pad.path != null;
+                        final fileName = hasFile
+                            ? pad.path!.split('/').last
+                            : 'Empty';
+                        return DropTarget(
+                          onDragDone: (detail) {
+                            if (detail.files.isEmpty) return;
+                            final f = detail.files.first;
+                            if (!f.name.toLowerCase().endsWith('.mp3') &&
+                                !f.name.toLowerCase().endsWith('.wav') &&
+                                !f.name.toLowerCase().endsWith('.ogg') &&
+                                !f.name.toLowerCase().endsWith('.flac') &&
+                                !f.name.toLowerCase().endsWith('.aac') &&
+                                !f.name.toLowerCase().endsWith('.m4a')) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Unsupported file type: ${f.name}',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            controller.assignFilePathToPad(index, f.path);
+                          },
+                          child: _pad(color, hasFile, index, pad, fileName),
+                        );
                       },
-                      child: _pad(color, hasFile, index, pad, fileName),
                     );
                   },
                 ),
