@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:math' as math;
 
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:get/get.dart';
@@ -14,6 +15,11 @@ class AudioPlayerService extends GetxService {
   final RxList<SoundHandle> activeHandles = <SoundHandle>[].obs;
   // Track which path each active handle belongs to (no caching of sources).
   final Map<SoundHandle, String> _handlePath = {};
+
+  // --- added: expose master RMS levels for meters ---
+  double masterRmsL = 0.0;
+  double masterRmsR = 0.0;
+  // --- end added ---
 
   @override
   void onInit() {
@@ -187,4 +193,67 @@ class AudioPlayerService extends GetxService {
     await ensureInitialized();
     // intentionally no-op
   }
+
+  // --- added: real master level API used by the UI meter ---
+  // Returns [left, right] RMS levels in 0..1. Falls back to mono if needed.
+  List<double> getMasterLevels() {
+    if (!isInitialized.value || activeHandles.isEmpty) {
+      masterRmsL = 0.0;
+      masterRmsR = 0.0;
+      return [0.0, 0.0];
+    }
+
+    // Always get the latest buffer (even if engine hasn’t pushed new data yet).
+    audioData.updateSamples();
+    final buffer = audioData.getAudioData(alwaysReturnData: true);
+
+    if (buffer.isEmpty) {
+      masterRmsL = 0.0;
+      masterRmsR = 0.0;
+      return [0.0, 0.0];
+    }
+
+    double sumSqL = 0.0, sumSqR = 0.0;
+    int nL = 0, nR = 0;
+
+    // Heuristic: if we have many samples, assume interleaved stereo [L,R,L,R,...].
+    if (buffer.length >= 512) {
+      for (int i = 0; i < buffer.length; i += 2) {
+        final l = buffer[i];
+        sumSqL += l * l;
+        nL++;
+        if (i + 1 < buffer.length) {
+          final r = buffer[i + 1];
+          sumSqR += r * r;
+          nR++;
+        }
+      }
+    } else {
+      // Treat as mono; mirror to both channels.
+      for (int i = 0; i < buffer.length; i++) {
+        final s = buffer[i];
+        final sq = s * s;
+        sumSqL += sq;
+        sumSqR += sq;
+      }
+      nL = buffer.length;
+      nR = buffer.length;
+    }
+
+    final rmsL = nL > 0 ? math.sqrt(sumSqL / nL) : 0.0;
+    final rmsR = nR > 0 ? math.sqrt(sumSqR / nR) : rmsL;
+
+    masterRmsL = rmsL.clamp(0.0, 1.0);
+    masterRmsR = rmsR.clamp(0.0, 1.0);
+
+    return [masterRmsL, masterRmsR];
+  }
+
+  // Convenience mono level: average of L and R.
+  double getMasterLevel() {
+    final lr = getMasterLevels();
+    return ((lr[0] + lr[1]) * 0.5).clamp(0.0, 1.0);
+  }
+
+  // --- end added ---
 }
